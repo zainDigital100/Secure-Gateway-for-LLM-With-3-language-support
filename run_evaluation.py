@@ -2,49 +2,131 @@ import pandas as pd
 import requests
 import json
 import os
+import time
+import numpy as np
 
-# To be generated based on requirements
+# Configuration
 CSV_PATH = "data/final_eval.csv"
 API_URL = "http://127.0.0.1:5000/analyze"
 
+def calculate_metrics(res_df):
+    """Calculates all metrics required for the Lab Final report."""
+    
+    # Basic Accuracy
+    correct = (res_df['expected'] == res_df['actual']).sum()
+    accuracy = correct / len(res_df)
+
+    # For Precision, Recall, and F1, we treat BLOCK as 'Positive' (detected threat)
+    # and ALLOW/MASK as 'Negative' (non-threat/handled)
+    y_true = res_df['expected'] == 'BLOCK'
+    y_pred = res_df['actual'] == 'BLOCK'
+
+    tp = ((y_pred == True) & (y_true == True)).sum()
+    fp = ((y_pred == True) & (y_true == False)).sum()
+    fn = ((y_pred == False) & (y_true == True)).sum()
+    tn = ((y_pred == False) & (y_true == False)).sum()
+
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 0
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+
+    # Multilingual Detection Recall
+    # Assuming the CSV has a 'language' column
+    multi_recall = {}
+    if 'language' in res_df.columns:
+        for lang in res_df['language'].unique():
+            lang_df = res_df[res_df['language'] == lang]
+            l_true = lang_df['expected'] == 'BLOCK'
+            l_pred = lang_df['actual'] == 'BLOCK'
+            l_tp = ((l_pred == True) & (l_true == True)).sum()
+            l_fn = ((l_pred == False) & (l_true == True)).sum()
+            multi_recall[lang] = l_tp / (l_tp + l_fn) if (l_tp + l_fn) > 0 else 0
+
+    # Latency Statistics
+    latencies = res_df['latency']
+    mean_latency = latencies.mean()
+    median_latency = latencies.median()
+
+    return {
+        "accuracy": accuracy,
+        "precision": precision,
+        "recall": recall,
+        "f1_score": f1,
+        "multilingual_recall": multi_recall,
+        "mean_latency": mean_latency,
+        "median_latency": median_latency,
+        "confusion_matrix": {"tp": int(tp), "fp": int(fp), "fn": int(fn), "tn": int(tn)}
+    }
+
 def run_eval():
     if not os.path.exists(CSV_PATH):
-        print("Error: data/final_eval.csv not found.")
+        print(f"Error: {CSV_PATH} not found. Please ensure your dataset is in the data/ folder.")
         return
 
     df = pd.read_csv(CSV_PATH)
-    results = []
+    results_data = []
     
-    print(f"Starting evaluation on {len(df)} samples...")
+    print(f"🚀 Starting Hybrid Security Gateway Evaluation...")
+    print(f"Total Samples: {len(df)}")
+    print("-" * 40)
 
     for index, row in df.iterrows():
-        payload = {"text": row['prompt'], "input_id": row['id']}
+        payload = {"text": row['prompt'], "input_id": str(row.get('id', index))}
         try:
-            resp = requests.post(API_URL, json=payload)
+            start_wall = time.time()
+            resp = requests.post(API_URL, json=payload, timeout=30)
+            end_wall = time.time()
+            
             if resp.status_code == 200:
                 data = resp.json()
-                results.append({
-                    "id": row['id'],
+                results_data.append({
+                    "id": row.get('id', index),
+                    "language": row.get('language', 'en'),
                     "expected": row['expected_policy'],
                     "actual": data['decision'],
                     "risk": data['final_risk'],
-                    "latency": data['latency_ms']
+                    "latency": data['latency_ms'],
+                    "rtt_ms": (end_wall - start_wall) * 1000
                 })
-        except:
+                print(f"[{index+1}/{len(df)}] ID: {row.get('id', index)} | Decision: {data['decision']} | Latency: {data['latency_ms']}ms")
+            else:
+                print(f"[{index+1}/{len(df)}] Failed with status: {resp.status_code}")
+        except Exception as e:
+            print(f"[{index+1}/{len(df)}] Connection Error: {str(e)}")
             continue
 
-    res_df = pd.DataFrame(results)
-    
-    # Calculate Metrics
-    correct = (res_df['expected'] == res_df['actual']).sum()
-    accuracy = correct / len(res_df)
-    
-    print(f"--- Evaluation Complete ---")
-    print(f"Total: {len(res_df)}")
-    print(f"Accuracy: {accuracy:.2%}")
-    print(f"Mean Latency: {res_df['latency'].mean():.2f}ms")
+    if not results_data:
+        print("No results collected. Evaluation aborted.")
+        return
+
+    res_df = pd.DataFrame(results_data)
+    metrics = calculate_metrics(res_df)
+
+    print("-" * 40)
+    print(f"EVALUATION SUMMARY")
+    print(f"Accuracy:  {metrics['accuracy']:.2%}")
+    print(f"Precision: {metrics['precision']:.2%}")
+    print(f"Recall:    {metrics['recall']:.2%}")
+    print(f"F1-Score:  {metrics['f1_score']:.2%}")
+    print("-" * 20)
+    print(f"Mean Latency:   {metrics['mean_latency']:.2f}ms")
+    print(f"Median Latency: {metrics['median_latency']:.2f}ms")
+    print("-" * 20)
+    print("Multilingual Recall:")
+    for lang, val in metrics['multilingual_recall'].items():
+        print(f"  - {lang}: {val:.2%}")
+
+    # Export results
+    if not os.path.exists("results"):
+        os.makedirs("results")
     
     res_df.to_csv("results/evaluation_results.csv", index=False)
+    with open("results/metrics_summary.json", "w") as f:
+        json.dump(metrics, f, indent=4)
+    
+    print("-" * 40)
+    print(f"Full results saved to 'results/evaluation_results.csv'")
+    print(f"Summary metrics saved to 'results/metrics_summary.json'")
 
 if __name__ == "__main__":
     run_eval()
