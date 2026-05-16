@@ -1,0 +1,7 @@
+flask
+requests
+presidio-analyzer
+presidio-anonymizer
+pyyaml
+pandas
+spacy

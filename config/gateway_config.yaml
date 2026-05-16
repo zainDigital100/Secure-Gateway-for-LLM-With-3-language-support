@@ -1,0 +1,19 @@
+thresholds:
+  injection_block: 0.85
+  injection_warn: 0.50
+  pii_confidence_min: 0.40
+  semantic_weight: 0.70
+  rule_weight: 0.30
+
+pii_weights:
+  API_KEY: 0.9
+  INTERNAL_ID: 0.8
+  CNIC: 0.7
+  STUDENT_ID: 0.6
+  PHONE_NUMBER: 0.4
+  EMAIL_ADDRESS: 0.3
+
+languages:
+  - en
+  - ur
+  - ko
