@@ -166,7 +166,6 @@ Metrics include:
 - Multilingual Detection Recall
 - Mean Latency
 - Median Latency
-- P95 Latency
 
 ---
 
