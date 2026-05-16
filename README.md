@@ -50,17 +50,16 @@ The gateway processes every request through a sequential security pipeline:
 
 ```bash
 llm-security-gateway-final/
-├── app/
-│   ├── main.py
-│   ├── detectors/
-│   │   ├── rule_detector.py
-│   │   └── semantic_detector.py
-│   ├── pii/
-│   │   └── presidio_custom.py
-│   ├── policy/
-│   │   └── policy_engine.py
-│   └── utils/
-│       └── language_utils.py
+├── main.py
+├── detectors/
+│   ├── rule_detector.py
+│   └── semantic_detector.py
+├── pii/
+│   └── presidio_custom.py
+├── policy/
+│   └── policy_engine.py
+├── utils/
+│   └── language_utils.py
 ├── config/
 │   └── gateway_config.yaml
 ├── data/
@@ -69,6 +68,7 @@ llm-security-gateway-final/
 │   └── evaluation_results.csv
 ├── run_evaluation.py
 └── requirements.txt
+```
 ```
 
 ---
