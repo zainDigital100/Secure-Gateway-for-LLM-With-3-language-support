@@ -1,5 +1,4 @@
 import yaml
-import os
 
 class PolicyEngine:
     def __init__(self, config_path):
@@ -9,13 +8,10 @@ class PolicyEngine:
     def decide(self, rule_score, semantic_result, pii_results):
         semantic_score = semantic_result.get('score', 0)
         attack_type = semantic_result.get('attack_type')
-        
         t = self.config['thresholds']
         
-        # Hybrid Risk Formula: max(Rule, Semantic) + Weighted PII influence
         base_risk = max(rule_score, semantic_score)
         
-        # Check for high-risk PII that forces a BLOCK (e.g. API Keys)
         pii_entities = [r.entity_type for r in pii_results]
         high_risk_pii = ["API_KEY", "INTERNAL_ID", "CNIC"]
         force_block_pii = any(e in pii_entities for e in high_risk_pii)

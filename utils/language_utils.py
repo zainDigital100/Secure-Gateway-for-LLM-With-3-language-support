@@ -1,16 +1,10 @@
 import re
 
 def detect_language(text):
-    """
-    Simple heuristic-based language detection.
-    """
-    # Urdu/Arabic script range
     if re.search(r'[\u0600-\u06FF]', text):
         return "ur"
-    # Korean script range
     if re.search(r'[\uAC00-\uD7AF\u1100-\u11FF]', text):
         return "ko"
-    # Default to English
     return "en"
 
 def get_multilingual_keywords():
@@ -24,10 +18,10 @@ def get_multilingual_keywords():
             "unauthorized", "forget constraints"
         ],
         "ur": [
-            "نظر انداز", "سسٹم پرامپٹ", "بائی پاس", "خفیہ", "بھول جاؤ", 
+            "نظر انداز", "سستم پرامپٹ", "بائی پاس", "خفیہ", "بھول جاؤ", 
             "پرانی ہدایات", "قوانین ختم کریں", "ڈویلپر موڈ", "ڈیٹا لیک", "معلومات دکھائیں", 
             "سیکیورٹی نظر انداز", "عمل کریں", "نئی ہدایات", "پابندی ہٹائیں", 
-            "خفیہ کوڈ", "سسٹم کی معلومات", "پرائیویٹ ڈیٹا", "پاس ورڈ دکھائیں", 
+            "خفیہ کوڈ", "سستم کی معلومات", "پرائیویٹ ڈیٹا", "پاس ورڈ دکھائیں", 
             "برائے مہربانی بتائیں", "اندرونی قوانین", "تمام پابندیاں", "آزاد موڈ", 
             "متبادل موڈ", "حکم مانیں", "ڈیفالٹ سیٹنگز"
         ],

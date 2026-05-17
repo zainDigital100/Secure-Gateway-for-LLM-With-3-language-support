@@ -3,21 +3,14 @@ import requests
 import json
 import os
 import time
-import numpy as np
 
-# Configuration
 CSV_PATH = "data/final_eval.csv"
 API_URL = "http://127.0.0.1:5000/analyze"
 
 def calculate_metrics(res_df):
-    """Calculates all metrics required for the Lab Final report."""
-    
-    # Basic Accuracy
     correct = (res_df['expected'] == res_df['actual']).sum()
     accuracy = correct / len(res_df)
 
-    # For Precision, Recall, and F1, we treat BLOCK as 'Positive' (detected threat)
-    # and ALLOW/MASK as 'Negative' (non-threat/handled)
     y_true = res_df['expected'] == 'BLOCK'
     y_pred = res_df['actual'] == 'BLOCK'
 
@@ -30,8 +23,6 @@ def calculate_metrics(res_df):
     recall = tp / (tp + fn) if (tp + fn) > 0 else 0
     f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
 
-    # Multilingual Detection Recall
-    # Assuming the CSV has a 'language' column
     multi_recall = {}
     if 'language' in res_df.columns:
         for lang in res_df['language'].unique():
@@ -42,7 +33,6 @@ def calculate_metrics(res_df):
             l_fn = ((l_pred == False) & (l_true == True)).sum()
             multi_recall[lang] = l_tp / (l_tp + l_fn) if (l_tp + l_fn) > 0 else 0
 
-    # Latency Statistics
     latencies = res_df['latency']
     mean_latency = latencies.mean()
     median_latency = latencies.median()
@@ -60,7 +50,7 @@ def calculate_metrics(res_df):
 
 def run_eval():
     if not os.path.exists(CSV_PATH):
-        print(f"Error: {CSV_PATH} not found. Please ensure your dataset is in the data/ folder.")
+        print(f"Error: {CSV_PATH} not found.")
         return
 
     df = pd.read_csv(CSV_PATH)
@@ -96,14 +86,14 @@ def run_eval():
             continue
 
     if not results_data:
-        print("No results collected. Evaluation aborted.")
+        print("No results collected.")
         return
 
     res_df = pd.DataFrame(results_data)
     metrics = calculate_metrics(res_df)
 
     print("-" * 40)
-    print(f"EVALUATION SUMMARY")
+    print(f"✅ EVALUATION SUMMARY")
     print(f"Accuracy:  {metrics['accuracy']:.2%}")
     print(f"Precision: {metrics['precision']:.2%}")
     print(f"Recall:    {metrics['recall']:.2%}")
@@ -116,7 +106,6 @@ def run_eval():
     for lang, val in metrics['multilingual_recall'].items():
         print(f"  - {lang}: {val:.2%}")
 
-    # Export results
     if not os.path.exists("results"):
         os.makedirs("results")
     
@@ -125,8 +114,7 @@ def run_eval():
         json.dump(metrics, f, indent=4)
     
     print("-" * 40)
-    print(f"Full results saved to 'results/evaluation_results.csv'")
-    print(f"Summary metrics saved to 'results/metrics_summary.json'")
+    print(f"Results saved to 'results/' directory.")
 
 if __name__ == "__main__":
     run_eval()

@@ -8,8 +8,7 @@ class RuleDetector:
         lang = detect_language(text)
         text_lower = text.lower()
         score = 0.0
-        
-        # Check language-specific keywords
+
         keywords = self.keyword_map.get(lang, self.keyword_map['en'])
         matches = [kw for kw in keywords if kw in text_lower]
         

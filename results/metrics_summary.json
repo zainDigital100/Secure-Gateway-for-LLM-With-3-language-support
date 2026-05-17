@@ -1,0 +1,19 @@
+{
+    "accuracy": 0.5,
+    "precision": 0.5,
+    "recall": 0.25,
+    "f1_score": 0.3333333333333333,
+    "multilingual_recall": {
+        "en": 0.5,
+        "ur": 0.0,
+        "ko": 0.0
+    },
+    "mean_latency": 18576.3825,
+    "median_latency": 18523.260000000002,
+    "confusion_matrix": {
+        "tp": 1,
+        "fp": 1,
+        "fn": 3,
+        "tn": 3
+    }
+}
