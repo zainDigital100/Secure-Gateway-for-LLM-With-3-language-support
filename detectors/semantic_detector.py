@@ -8,7 +8,7 @@ class SemanticDetector:
     Satisfies the 'Semantic/ML' requirement.
     """
     def __init__(self):
-        self.api_key = "YOUR_GEMINI_API_KEY"
+        self.api_key = "AIzaSyBHFzpKUMlp__wQg3l1dMbACTnLQKs-IVo" # Handled by environment
         self.model = "gemini-2.5-flash-preview-09-2025"
         self.endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
 
