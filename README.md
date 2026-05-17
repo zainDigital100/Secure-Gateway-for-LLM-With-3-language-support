@@ -124,7 +124,7 @@ python -m spacy download en_core_web_lg
 Open:
 
 ```bash
-app/detectors/semantic_detector.py
+detectors/semantic_detector.py
 ```
 
 Add your Gemini API key:
