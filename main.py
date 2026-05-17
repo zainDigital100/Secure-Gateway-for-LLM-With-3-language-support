@@ -9,7 +9,6 @@ from policy.policy_engine import PolicyEngine
 
 app = Flask(__name__)
 
-# Initialize components
 rule_detector = RuleDetector()
 semantic_detector = SemanticDetector()
 presidio = EnhancedPresidio()
@@ -25,19 +24,15 @@ def analyze():
     
     text = data["text"]
 
-    # 1. Hybrid Detection
     rule_score, lang = rule_detector.detect(text)
     semantic_result = semantic_detector.analyze(text)
-    
-    # 2. PII Analysis
+
     pii_results = presidio.analyze(text)
-    
-    # 3. Policy Decision
+   
     decision, risk_score, reason_codes = policy_engine.decide(
         rule_score, semantic_result, pii_results
     )
 
-    # 4. Output Generation
     safe_text = text
     if decision == "BLOCK":
         safe_text = None
@@ -46,7 +41,6 @@ def analyze():
 
     latency = round((time.time() - start_time) * 1000, 2)
 
-    # Required JSON Response Format
     response = {
         "input_id": data.get("input_id", "manual"),
         "language": lang,
@@ -65,7 +59,6 @@ def analyze():
     return jsonify(response)
 
 if __name__ == "__main__":
-    # Create directories if they don't exist
     for folder in ['config', 'detectors', 'pii', 'policy', 'utils', 'data']:
         if not os.path.exists(folder): os.makedirs(folder)
     app.run(port=5000)
