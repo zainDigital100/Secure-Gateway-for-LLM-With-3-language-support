@@ -11,22 +11,18 @@ def find_active_server():
         for host in hosts:
             url = f"http://{host}:{port}/analyze"
             try:
-                # Send a dummy request with multiple common keys to check if the port is open
-                # Increased timeout here slightly to account for slow server wake-ups
                 resp = requests.post(url, json={"input_id": "ping", "prompt": "test", "text": "test"}, timeout=5)
-                # If we get here (or even throw a 400/422 status code exception later), the server exists!
                 print(f"✅ Connected successfully to {url}\n")
                 return url
             except requests.exceptions.ConnectionError:
                 continue
             except requests.exceptions.RequestException:
-                # Server responded but might have thrown a 422 Unprocessable Entity etc.
                 print(f"✅ Connected successfully to {url}\n")
                 return url
                 
     print("❌ Could not detect a running server on standard ports.")
     print("Please check your server terminal to confirm the URL and port.\n")
-    return "http://127.0.0.1:8000/analyze"  # Default fallback
+    return "http://127.0.0.1:8000/analyze"
 
 def run_interactive_test():
     url = find_active_server()
@@ -48,7 +44,6 @@ def run_interactive_test():
         if not user_prompt.strip():
             continue
             
-        # Added "text" and "input_text" alongside "prompt" to cover custom Flask backend requirements
         payload = {
             "input_id": "interactive_test", 
             "prompt": user_prompt,
@@ -58,11 +53,8 @@ def run_interactive_test():
         start_t = time.time()
         
         try:
-            # INCREASED TIMEOUT: ML models (like Presidio) can take a while to process, 
-            # especially on the first request. Changed from 10 to 60 seconds.
             resp = requests.post(url, json=payload, timeout=60)
             
-            # Catch 400/422/500 errors and print the exact message from the server
             if not resp.ok:
                 print(f"\nServer Error ({resp.status_code}): {resp.text}")
                 print("Tip: Check if your server expects different JSON keys.")
